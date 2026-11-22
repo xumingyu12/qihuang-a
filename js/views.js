@@ -268,7 +268,7 @@
     return { nodes: [...nodes.values()], edges };
   }
 
-  const gstate = { types: new Set(TYPE_ORDER), sel: null, path: null, scope: 'core' };
+  const gstate = { types: new Set(TYPE_ORDER), sel: null, path: null, scope: 'core', depth: 2 };
 
   function graph(root) {
     const scope = gstate.scope === 'core'
@@ -361,6 +361,7 @@
 
     const visible = (id) => pos[id] && gstate.types.has(pos[id].nd.type);
     const pathSet = gstate.path ? new Set(gstate.path) : null;
+    const trace = gstate.sel ? traceSet(gstate.sel, gstate.depth) : null;
 
     let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">`;
     // 列标题
@@ -374,7 +375,7 @@
       const a = pos[ed.s], b = pos[ed.d];
       const rel = QH.relations.find((r) => r.id === ed.rel) || { color: '#cfc6b6' };
       const onPath = pathSet && pathSet.has(ed.s) && pathSet.has(ed.d);
-      const dim = gstate.sel && !onPath && ed.s !== gstate.sel && ed.d !== gstate.sel;
+      const dim = trace && !onPath && !(trace.has(ed.s) && trace.has(ed.d));
       const mx = (a.x + b.x) / 2;
       svg += `<path class="gedge ${onPath ? 'hl' : ''} ${dim ? 'dim' : ''}" d="M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}" stroke="${rel.color}"></path>`;
     });
@@ -385,7 +386,7 @@
         const p = pos[nd.id];
         const r = TYPE_R[t];
         const onPath = pathSet && pathSet.has(nd.id);
-        const dim = gstate.sel && !onPath && nd.id !== gstate.sel && !neighbors(gstate.sel).has(nd.id);
+        const dim = trace && !onPath && !trace.has(nd.id);
         const anchorEnd = TYPE_ORDER.indexOf(t) >= 6;
         const tx = anchorEnd ? p.x - r - 4 : p.x + r + 4;
         svg += `<g class="gnode r-${t} ${dim ? 'dim' : ''} ${onPath ? 'hl' : ''}" data-id="${nd.id}" onclick="QHV.selNode('${nd.id}')">
@@ -403,6 +404,27 @@
     const s = new Set([id]);
     (gstate.g.edges || []).forEach((ed) => { if (ed.s === id) s.add(ed.d); if (ed.d === id) s.add(ed.s); });
     return s;
+  }
+
+  /* 从选中节点出发，沿「证据链」向外扩散 depth 跳，返回整条链上的节点集合。
+     默认 2 跳：通路 → 靶点 → 成分；再往上（药味、方剂）用面板里的「3 跳 / 全链」。 */
+  function traceSet(id, depth) {
+    const adj = {};
+    (gstate.g.edges || []).forEach((ed) => {
+      (adj[ed.s] = adj[ed.s] || []).push(ed.d);
+      (adj[ed.d] = adj[ed.d] || []).push(ed.s);
+    });
+    const seen = new Set([id]);
+    let frontier = [id];
+    for (let d = 0; d < depth; d++) {
+      const next = [];
+      frontier.forEach((n) => (adj[n] || []).forEach((m) => {
+        if (!seen.has(m)) { seen.add(m); next.push(m); }
+      }));
+      frontier = next;
+      if (!frontier.length) break;
+    }
+    return seen;
   }
 
   function toggleType(t) {
@@ -479,13 +501,32 @@
         ${evChip(x.ev, x.conf)}
       </div>`;
 
+    // 高亮范围：默认顺着证据链亮 4 跳（通路→靶点→成分→药味→方剂）
+    const chain = traceSet(id, gstate.depth);
+    const chainEdges = gstate.g.edges.filter((x) => chain.has(x.s) && chain.has(x.d)).length;
+    const typesIn = new Set([...chain].map((nid) => {
+      const n = gstate.g.nodes.find((x) => x.id === nid); return n ? n.type : '';
+    }).filter(Boolean));
+    const depthBtn = (n, t) => `<button class="btn sm ${gstate.depth === n ? 'primary' : ''}" onclick="QHV.setDepth(${n})">${t}</button>`;
+
     panel.innerHTML = `<div class="card-h"><span>${TYPE_CN[nd.type]} · ${e(nd.label)}</span>
         <small class="mono">${e(nd.id)}</small></div>
       <div class="card-b">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <span class="tag g">链上 ${chain.size} 节点 · ${chainEdges} 关系 · ${typesIn.size} 类实体</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10.5px;color:var(--muted)">高亮</span>
+          ${depthBtn(1, '1 跳')}${depthBtn(2, '2 跳')}${depthBtn(3, '3 跳')}${depthBtn(9, '全链')}
+        </div>
         ${body}
-        <div style="margin-top:10px;font-size:11.5px;color:var(--muted)">关系（${outs.length} 出 / ${ins.length} 入）</div>
+        <div style="margin-top:10px;font-size:11.5px;color:var(--muted)">直接关系（${outs.length} 出 / ${ins.length} 入）</div>
         <div style="max-height:190px;overflow:auto">${outs.map((x) => relRow(x, '出')).join('')}${ins.map((x) => relRow(x, '入')).join('')}</div>
       </div>`;
+  }
+
+  function setDepth(n) {
+    gstate.depth = n;
+    if (gstate.sel) selNode(gstate.sel); else QHROUTE('graph');
   }
 
   /* 路径：从证候走到靶点（BFS） */
@@ -514,7 +555,7 @@
   }
 
   window.QHV = {
-    pickCase, pickField, toggleType, allTypes, toggleScope, selNode, pathDemo,
+    pickCase, pickField, toggleType, allTypes, toggleScope, selNode, pathDemo, setDepth,
     get graphs() { return gstate; }
   };
   window.QHVIEWS = Object.assign(window.QHVIEWS || {}, { overview, emr, graph });
