@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>岐黄智谱 · 分子-靶点对接工作台</title>
+<link rel="stylesheet" href="assets/css/lab.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="seal">岐</div>
+    <h1>岐黄智谱 · 分子-靶点对接工作台</h1>
+    <span class="sub">中药成分筛选 · 口袋检测 · 刚性对接</span>
+  </div>
+  <div class="topmeta">
+    <span>成分 <b id="mComp">—</b></span>
+    <span>靶点 <b id="mTgt">—</b></span>
+    <span>对接 <b id="mRun">—</b></span>
+    <span>计算于 <b id="mDate">—</b></span>
+  </div>
+</header>
+
+<nav>
+  <button data-t="screen" class="on">① 成分筛选</button>
+  <button data-t="targets">② 靶点与口袋</button>
+  <button data-t="dock">③ 对接结果</button>
+  <button data-t="matrix">④ 打分矩阵</button>
+  <button data-t="valid">⑤ 引擎验证</button>
+  <span class="right"><span id="navHint"></span></span>
+</nav>
+
+<main>
+  <section class="view on" id="v-screen"></section>
+  <section class="view" id="v-targets"></section>
+  <section class="view" id="v-dock"></section>
+  <section class="view" id="v-matrix"></section>
+  <section class="view" id="v-valid"></section>
+</main>
+
+<footer>
+  <span id="footL">参数：口袋 PSP 射线法 · 对接网格粗搜 + 原子对精修 · 打分单位为名义 kcal/mol（未与 Vina 对标）</span>
+  <span id="footR">数据：RCSB PDB 实验结构 · PubChem/手工 SMILES · 全部数值由本机计算</span>
+</footer>
+
+<script src="assets/vendor/3Dmol-min.js"></script>
+<script src="js/lab-data.js"></script>
+<script src="js/lab.js"></script>
+</body>
+</html>

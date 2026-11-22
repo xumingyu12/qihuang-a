@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>岐黄智谱 · 专病知识融合与分子发现平台（原型）</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="seal">岐</div>
+    <div class="brand-text">
+      <h1>岐黄智谱 <span class="sep">·</span> 专病知识融合与分子发现平台</h1>
+      <p>南京师范大学大创 · 以暴聋为示范专病</p>
+    </div>
+  </div>
+  <div class="topmeta">
+    <div class="metric"><b>8</b><span>类实体</span></div>
+    <div class="metric"><b>9</b><span>类关系</span></div>
+    <div class="metric"><b>21</b><span>成分</span></div>
+    <div class="metric"><b>21</b><span>对回检</span></div>
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="#/overview" data-route="overview"><i>00</i>总览</a>
+  <a href="#/emr" data-route="emr"><i>L1</i>数据治理</a>
+  <a href="#/graph" data-route="graph"><i>L2</i>知识图谱</a>
+  <a href="#/rx" data-route="rx"><i>L3</i>处方优化</a>
+  <a href="#/mol" data-route="mol"><i>L3</i>分子发现</a>
+  <a href="#/platform" data-route="platform"><i>L4</i>工作台</a>
+  <a href="#/recheck" data-route="recheck"><i>L5</i>闭环回检</a>
+  <a href="#/metrics" data-route="metrics"><i>··</i>指标</a>
+  <span class="spacer"></span>
+</nav>
+
+<main>
+  <div id="app" class="view on"></div>
+</main>
+
+<script src="assets/vendor/3Dmol-min.js"></script>
+<script src="js/mols.js"></script>
+<script src="js/data.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/views.js"></script>
+<script src="js/views2.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
